@@ -112,6 +112,9 @@ convention = "numpy"
 [tool.mypy]
 exclude = ["hatch/", "tests/"]
 strict = true
+# Resolve `skore` from the monorepo so `from skore import THREADABLE` matches this tree
+# (the PyPI wheel has no `py.typed` and pre-commit installs it outside this repo).
+mypy_path = ["../skore/src"]
 
 [[tool.mypy.overrides]]
 follow_untyped_imports = true
