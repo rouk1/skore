@@ -261,7 +261,7 @@ class Project:
                 f"`skore.CrossValidationReport` (found '{type(report)}')."
             )
 
-        if report.ml_task == "binary-classification":
+        if report.ml_task == "binary-classification" and report.pos_label is not None:
             # check that pos_label is either specified or can be inferred from the data
             if isinstance(report, EstimatorReport):
                 target = report.estimator_.classes_
