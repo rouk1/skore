@@ -6,6 +6,7 @@ import itertools
 import re
 import warnings
 from collections.abc import Callable
+from contextlib import suppress
 from functools import wraps
 from operator import itemgetter
 from re import sub as substitute
@@ -13,6 +14,7 @@ from tempfile import TemporaryFile
 from typing import TYPE_CHECKING, Any, ParamSpec, TypedDict, TypeVar
 from unicodedata import normalize
 
+import numpy as np
 from httpx import HTTPStatusError, codes
 from joblib import load as joblib_load
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
@@ -261,20 +263,26 @@ class Project:
                 f"`skore.CrossValidationReport` (found '{type(report)}')."
             )
 
-        if report.ml_task == "binary-classification" and report.pos_label is not None:
-            # check that pos_label is either specified or can be inferred from the data
+        if report.ml_task == "binary-classification":
+            # check that pos_label is either consistent with the target
+            # or can be inferred from the data
             if isinstance(report, EstimatorReport):
                 target = report.estimator_.classes_
             else:  # CrossValidationReport
                 target = report.estimator_reports_[0].estimator_.classes_
 
-            try:
-                _check_pos_label_consistency(report.pos_label, target)
-            except ValueError as exc:
+            with suppress(ValueError):
+                report.pos_label = _check_pos_label_consistency(
+                    report.pos_label, target
+                )
+
+            if report.pos_label not in target:
+                labels = np.unique(target)
                 raise ValueError(
-                    "For binary classification, the positive label must be specified. "
-                    "You can set it using `report.pos_label = <positive_label>`."
-                ) from exc
+                    f"For binary classification, the positive label must be one of: "
+                    f"{', '.join(labels)}. "
+                    f"Got {report.pos_label!r}."
+                )
 
         payload: EstimatorReportPayload | CrossValidationReportPayload
 

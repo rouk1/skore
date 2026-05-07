@@ -101,15 +101,13 @@ console = Console(
 )
 
 
-# Whether Rich live/progress can safely auto-refresh while worker threads run.
-# Initialized before the probe so type checkers see a definite binding (strict mypy).
-THREADABLE: bool = False
+# Whether threading is available or not.
+THREADABLE: bool = True
 try:
     from threading import Thread
 
     thread = Thread()
     thread.start()
     thread.join()
-    THREADABLE = True
 except Exception:
-    pass
+    THREADABLE = False
