@@ -276,8 +276,8 @@ class Project:
                     report.pos_label, target
                 )
 
-            if report.pos_label not in target:
-                labels = np.unique(target)
+            labels = np.unique(target)
+            if report.pos_label not in labels:
                 raise ValueError(
                     f"For binary classification, the positive label must be one of: "
                     f"{', '.join(labels)}. "
