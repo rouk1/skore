@@ -6,7 +6,6 @@ import itertools
 import re
 import warnings
 from collections.abc import Callable
-from contextlib import suppress
 from functools import wraps
 from operator import itemgetter
 from re import sub as substitute
@@ -14,11 +13,9 @@ from tempfile import TemporaryFile
 from typing import TYPE_CHECKING, Any, ParamSpec, TypedDict, TypeVar
 from unicodedata import normalize
 
-import numpy as np
 from httpx import HTTPStatusError, codes
 from joblib import load as joblib_load
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
-from sklearn.utils.validation import _check_pos_label_consistency
 from skore import THREADABLE, console
 
 from skore_hub_project import switch_plt_backend
@@ -262,27 +259,6 @@ class Project:
                 f"Report must be a `skore.EstimatorReport` or "
                 f"`skore.CrossValidationReport` (found '{type(report)}')."
             )
-
-        if report.ml_task == "binary-classification":
-            # check that pos_label is either consistent with the target
-            # or can be inferred from the data
-            if isinstance(report, EstimatorReport):
-                target = report.estimator_.classes_
-            else:  # CrossValidationReport
-                target = report.estimator_reports_[0].estimator_.classes_
-
-            with suppress(ValueError):
-                report.pos_label = _check_pos_label_consistency(
-                    report.pos_label, target
-                )
-
-            labels = np.unique(target)
-            if report.pos_label not in labels:
-                raise ValueError(
-                    f"For binary classification, the positive label must be one of: "
-                    f"{', '.join(labels)}. "
-                    f"Got {report.pos_label!r}."
-                )
 
         payload: EstimatorReportPayload | CrossValidationReportPayload
 
